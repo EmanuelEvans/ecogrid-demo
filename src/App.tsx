@@ -126,6 +126,19 @@ function Welcome({ onEnter, onRegister, onLogin }: { onEnter: () => void; onRegi
     <PrimaryButton onClick={onRegister}>Креирај профил <ArrowRight size={17} /></PrimaryButton>
     <PrimaryButton secondary onClick={onLogin}>Веќе имам профил</PrimaryButton>
     <button className="text-button" onClick={onEnter}>Продолжи како демо-корисник</button>
+    <motion.a
+      className="instagram-qr-card"
+      href="https://www.instagram.com/terrapulse_innovations/"
+      target="_blank"
+      rel="noreferrer"
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.25, duration: 0.45 }}
+    >
+      <img src={`${import.meta.env.BASE_URL}instagram-qr.png`} alt="QR-код за Instagram профилот на TerraPulse Innovations" />
+      <span><b>Следете нè на Instagram</b><small>@terrapulse_innovations</small></span>
+      <ArrowRight size={16} aria-hidden="true" />
+    </motion.a>
     <div className="welcome-foot"><ShieldCheck size={14} /> Демонстрациска апликација · TerraPulse Innovations</div>
   </motion.div>;
 }
