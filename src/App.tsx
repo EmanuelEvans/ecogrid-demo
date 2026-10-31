@@ -77,10 +77,10 @@ function DemoCaption() {
   return <span className="demo-caption">Демо податоци</span>;
 }
 
-function PrimaryButton({ children, onClick, disabled = false, secondary = false, className = '' }: {
-  children: React.ReactNode; onClick?: () => void; disabled?: boolean; secondary?: boolean; className?: string;
+function PrimaryButton({ children, onClick, disabled = false, secondary = false, className = '', type = 'button' }: {
+  children: React.ReactNode; onClick?: () => void; disabled?: boolean; secondary?: boolean; className?: string; type?: 'button' | 'submit';
 }) {
-  return <motion.button type="button" whileTap={{ scale: 0.96 }} className={`button ${secondary ? 'button-secondary' : 'button-primary'} ${className}`} onClick={onClick} disabled={disabled}>{children}</motion.button>;
+  return <motion.button type={type} whileTap={{ scale: 0.96 }} className={`button ${secondary ? 'button-secondary' : 'button-primary'} ${className}`} onClick={onClick} disabled={disabled}>{children}</motion.button>;
 }
 
 function GlassCard({ children, className = '', onClick }: { children: React.ReactNode; className?: string; onClick?: () => void }) {
@@ -155,7 +155,7 @@ function AuthForm({ mode, onBack, onDone, onInstitution }: { mode: 'register' | 
       <label className="field"><span>Лозинка</span><input type={visible ? 'text' : 'password'} placeholder="Најмалку 8 знаци" value={password} onChange={(event) => setPassword(event.target.value)} /><button type="button" className="field-eye" onClick={() => setVisible(!visible)}>{visible ? 'Сокриј' : 'Прикажи'}</button></label>
       {mode === 'register' && <div className="strength-meter"><i className={password.length > 0 ? 'on' : ''} /><i className={password.length >= 5 ? 'on' : ''} /><i className={password.length >= 8 ? 'on' : ''} /><i className={password.length >= 12 ? 'on' : ''} /></div>}
       {error && <p className="error-copy" role="alert">{error}</p>}
-      <PrimaryButton>{mode === 'register' ? 'Продолжи' : 'Најави се'}</PrimaryButton>
+      <PrimaryButton type="submit">{mode === 'register' ? 'Продолжи' : 'Најави се'}</PrimaryButton>
     </form>
     <button className="text-button auth-business" onClick={onInstitution}>Институција или компанија?</button>
   </motion.div>;
