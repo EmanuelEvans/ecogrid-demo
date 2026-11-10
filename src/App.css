@@ -120,7 +120,10 @@
 .form-card .poll-options input{width:100%;min-width:0;min-height:41px;flex:1 1 100%;padding:9px 10px;border:1px solid var(--border);border-radius:11px;background:var(--bg-forest);color:var(--text);font:inherit;font-size:10px;box-shadow:none}
 .form-card .poll-options input:focus{border-color:var(--lime);outline:2px solid rgba(212,255,79,.16)}
 .unit-path::before{display:none}
-.path-row{box-sizing:border-box;min-width:0;padding-right:42px;gap:9px}
+.path-row{box-sizing:border-box;min-width:0;justify-content:center;gap:0}
+.path-content{width:237px;max-width:100%;min-width:0;display:flex;align-items:center;gap:9px}
+.path-content.shift-right{transform:translateX(36px)}
+.path-content.shift-left{transform:translateX(-36px)}
 .unit-copy{min-width:0;flex:1 1 172px;width:auto}
 .unit-copy b{overflow-wrap:anywhere}
 .chest-node{right:4px;flex:0 0 31px}
@@ -134,4 +137,6 @@
 .badge-earned-check{position:absolute;top:5px;right:5px;color:var(--lime)}
 .archive-action{display:flex;justify-content:center;margin:10px 0}
 .archive-action .button{width:min(100%,320px);min-height:44px}
-@media(max-width:420px){.path-row{padding-right:39px;gap:7px}.unit-copy{flex-basis:0}.all-badges-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:420px){.path-content{width:237px;max-width:100%;gap:7px}.unit-copy{flex-basis:0}.all-badges-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:340px){.path-content.shift-right{transform:translateX(30px)}.path-content.shift-left{transform:translateX(-30px)}}
+@media(max-width:300px){.path-content.shift-right{transform:translateX(20px)}.path-content.shift-left{transform:translateX(-20px)}}

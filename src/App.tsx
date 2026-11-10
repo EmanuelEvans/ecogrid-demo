@@ -267,14 +267,18 @@ function Academy({ completedUnits, premium, onStart, onSwitch }: {
           const unit = part * 25 + index + 1;
           const done = completedUnits.includes(unit);
           const current = unit === Math.max(1, totalDone + 1);
+          const hasChest = unit % 5 === 0;
+          const pathShift = hasChest ? '' : index % 4 === 1 ? 'shift-right' : index % 4 === 3 ? 'shift-left' : '';
           return <div className="path-row" key={unit}>
+            <div className={`path-content ${pathShift}`}>
             <button className={`unit-node ${done ? 'done' : current ? 'current' : 'locked'}`} onClick={() => !done && !current ? undefined : onStart(unit)} aria-label={`Единица ${unit}: ${titles[unit - 1]}`}>
               {done ? <Check /> : current ? <Leaf /> : <Lock size={19} />}
               {current && <span className="node-pulse" />}
               {current && <span className="node-tip">Почни</span>}
             </button>
             <div className="unit-copy"><span>ЕДИНИЦА {String(unit).padStart(2, '0')}</span><b>{titles[unit - 1] ?? `Еко-лекција ${unit}`}</b><small>{done ? 'Завршено · +25 XP' : current ? `${premium ? '+50' : '+25'} XP · 5 кратки прашања` : 'Отклучи со претходната лекција'}</small></div>
-            {unit % 5 === 0 && <button className="chest-node" aria-label="Еко-ковчег" onClick={() => onSwitch('Еко-ковчег')}>🎁</button>}
+            </div>
+            {hasChest && <button className="chest-node" aria-label="Еко-ковчег" onClick={() => onSwitch('Еко-ковчег')}>🎁</button>}
           </div>;
         })}</div>
       </section>)}
