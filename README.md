@@ -32,3 +32,7 @@ npm run preview
 GIF-прошетката е направена од снимки на вистинските екрани на демото.
 
 ![EcoGrid GIF-прошетка низ главните екрани](public/ecogrid-walkthrough.gif)
+
+## Презентација на проектот
+
+[Преземи ја презентацијата EcoGrid (PowerPoint)](public/EcoGrid-presentation.pptx) — идејата, локалниот контекст и прошетка низ демо-апликацијата.
