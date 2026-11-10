@@ -47,7 +47,7 @@ const matchDescriptionsByTopic = [
   ['Сад за хартија', 'Сад за стакло', 'Сад за пластика', 'Сад за био-отпад'],
 ] as const;
 
-const accountNames: Record<Account, string> = { citizen: 'Граѓанин', municipal: 'Општина / ЈКП', corporate: 'Компанија' };
+const accountNames: Record<Account, string> = { citizen: 'Граѓанин', municipal: 'Општина / ЈКП', corporate: 'Бренд-партнер' };
 const tabIcons = {
   citizen: [<BookOpen key="academy" />, <ShoppingBag key="market" />, <Vote key="voice" />, <MapPinned key="map" />, <MessageCircle key="chat" />, <Users key="profile" />],
   municipal: [<MapPinned key="map" />, <PackageCheck key="orders" />, <Vote key="voice" />, <Sprout key="actions" />, <Megaphone key="notices" />, <ShieldCheck key="profile" />],
@@ -267,8 +267,7 @@ function Academy({ completedUnits, premium, onStart, onSwitch }: {
           const unit = part * 25 + index + 1;
           const done = completedUnits.includes(unit);
           const current = unit === Math.max(1, totalDone + 1);
-          const offset = [0, 46, 0, -46][index % 4]!;
-          return <div className="path-row" key={unit} style={{ transform: `translateX(${offset}px)` }}>
+          return <div className="path-row" key={unit}>
             <button className={`unit-node ${done ? 'done' : current ? 'current' : 'locked'}`} onClick={() => !done && !current ? undefined : onStart(unit)} aria-label={`Единица ${unit}: ${titles[unit - 1]}`}>
               {done ? <Check /> : current ? <Leaf /> : <Lock size={19} />}
               {current && <span className="node-pulse" />}
@@ -381,13 +380,29 @@ function Profile({ onSheet, premium, tokens, xp, streak, reputation, vouchers, s
   onSheet: (sheet: SheetType) => void; premium: boolean; tokens: number; xp: number; streak: number; reputation: number; vouchers: ReturnType<typeof useDemoStore.getState>['vouchers']; savedBoosts: number; boostRemaining: number; onActivateBoost: () => void; onTheme: () => void; theme: string; onReset: () => void; completedUnits: number[];
 }) {
   const [showSettings, setShowSettings] = useState(false);
+  const [showAllBadges, setShowAllBadges] = useState(false);
+  const badges = [
+    { icon: '🌱', title: 'Новак истражувач', detail: 'Заврши ја првата лекција', earned: completedUnits.length >= 1 },
+    { icon: '🔥', title: 'Стодневник', detail: 'Одржи низа од 100 дена', earned: streak >= 100 },
+    { icon: '📘', title: 'Еко ученик', detail: 'Заврши 5 лекции', earned: completedUnits.length >= 5 },
+    { icon: '♻️', title: 'Чувар на природата', detail: 'Собери 1.000 XP', earned: xp >= 1_000 },
+    { icon: '🗺️', title: 'Око на заедницата', detail: 'Достигни репутација 5', earned: reputation >= 5 },
+    { icon: '🎟️', title: 'Зелен купувач', detail: 'Освои го првиот ваучер', earned: vouchers.length > 0 },
+    { icon: '🌳', title: 'Посветен ученик', detail: 'Заврши 10 лекции', earned: completedUnits.length >= 10 },
+    { icon: '🌍', title: 'Еко експерт', detail: 'Собери 5.000 XP', earned: xp >= 5_000 },
+    { icon: '💧', title: 'Чувар на водите', detail: 'Заврши 15 лекции', earned: completedUnits.length >= 15 },
+    { icon: '🏆', title: 'Легенда на заедницата', detail: 'Достигни репутација 10', earned: reputation >= 10 },
+    { icon: '🌿', title: 'Зелена низа', detail: 'Одржи низа од 30 дена', earned: streak >= 30 },
+    { icon: '✨', title: 'Еко-мајстор', detail: 'Заврши ги сите 50 лекции', earned: completedUnits.length >= 50 },
+  ];
   return <div className="screen-body profile-screen">
     <GlassCard className="profile-hero"><button className="profile-more" onClick={() => setShowSettings(!showSettings)} aria-label="Поставки"><MoreHorizontal /></button><button className="wallet-shortcut" onClick={() => onSheet('wallet')} aria-label="Отвори паричник"><Ticket size={20} />{vouchers.length > 0 && <i>{vouchers.length}</i>}</button>
       <div className="profile-avatar"><Avatar name="@marija_k" size={82} /><span><Check size={13} /></span></div><h2>@marija_k {premium && <StatusPill text="Премиум" />}</h2><p>Мали чекори, почиста Македонија 🌿</p><div className="profile-joined">Член од март 2025 · Скопје</div><Reputation value={reputation} label />
       <div className="profile-stats"><div><Flame /><b>{streak}</b><small>дена низа</small></div><div><Zap /><b>{formatTokens(xp)}</b><small>вкупно XP</small></div><div><Users /><b>128</b><small>пријатели</small></div></div><div className="xp-line"><div className="xp-line-label"><span>Ниво 4 · Зелено листо</span><span>1.250 / 2.000 XP</span></div><ProgressBar value={xp % 2_000} max={2_000} /></div><DemoCaption />
     </GlassCard>
-    <div className="profile-row"><h2>Мои беџови</h2><button className="text-button">Прикажи сѐ <ArrowRight size={15} /></button></div>
-    <div className="badges-grid">{[['🌱', 'Новак истражувач', 'x2'], ['🔥', 'Стодневник', ''], ['📘', 'Еко ученик', ''], ['♻️', 'Чувар на природата', '']].map(([icon, title, multiplier]) => <GlassCard className="badge-card" key={title}><span className="badge-icon">{icon}</span>{multiplier && <b className="badge-multiplier">{multiplier}</b>}<small>{title}</small></GlassCard>)}</div>
+    <div className="profile-row"><h2>Мои беџови</h2><button className="text-button" onClick={() => setShowAllBadges(true)} aria-expanded={showAllBadges}>Прикажи сѐ <ArrowRight size={15} /></button></div>
+    <div className="badges-grid">{badges.slice(0, 4).map((badge) => <GlassCard className={`badge-card ${badge.earned ? '' : 'badge-locked'}`} key={badge.title}><span className="badge-icon">{badge.icon}</span><small>{badge.title}</small></GlassCard>)}</div>
+    {showAllBadges && <div className="modal-backdrop badge-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) setShowAllBadges(false); }}><motion.div className="modal-sheet badges-modal" role="dialog" aria-modal="true" aria-labelledby="badges-title" initial={{ y: 60, opacity: 0 }} animate={{ y: 0, opacity: 1 }}><div className="sheet-handle" /><button className="sheet-close" onClick={() => setShowAllBadges(false)} aria-label="Затвори"><X /></button><span className="eyebrow">ЕКО-ПОСТИГНУВАЊА</span><h2 id="badges-title">Сите беџови</h2><p>{badges.filter((badge) => badge.earned).length} од {badges.length} беџови освоени. Продолжи со активности за да ги отклучиш останатите.</p><div className="all-badges-grid">{badges.map((badge) => <GlassCard className={`badge-card ${badge.earned ? '' : 'badge-locked'}`} key={badge.title}><span className="badge-icon">{badge.icon}</span><b className="badge-title">{badge.title}</b><small>{badge.earned ? 'Освоен' : badge.detail}</small>{badge.earned && <CheckCircle2 className="badge-earned-check" size={14} />}</GlassCard>)}</div></motion.div></div>}
     <GlassCard className="premium-card"><div><span className="eyebrow">ПОВЕЌЕ ЗА ПЛАНЕТАТА</span><h3>{premium ? 'Твојот Premium е активен' : 'Премини на Премиум'}</h3><p>Побрзо учење, повеќе енергија и без присилни реклами.</p></div><PrimaryButton onClick={() => onSheet('premium')}>{premium ? 'Прегледај' : '300 ден./мес.'}</PrimaryButton></GlassCard>
     {boostRemaining > 0 && <GlassCard className="boost-card boost-active"><div><span className="eyebrow">АКТИВЕН БУСТЕР</span><h3>2× XP · уште {Math.floor(boostRemaining / 60)}:{String(boostRemaining % 60).padStart(2, '0')}</h3></div><Sparkles /></GlassCard>}
     {savedBoosts > 0 && <GlassCard className="boost-card"><div><span className="eyebrow">ЗАЧУВАНА НАГРАДА</span><h3>{savedBoosts} × XP бустер</h3><p>Двојно XP во следните 10 минути.</p></div><PrimaryButton onClick={onActivateBoost}>Активирај бустер</PrimaryButton></GlassCard>}
@@ -480,12 +495,12 @@ function ActionCard({ action }: { action: ReturnType<typeof useDemoStore.getStat
 }
 
 function MunicipalProfile({ onSheet }: { onSheet: (sheet: SheetType) => void }) {
-  const chart = [{ m: 'Јан', locations: 18, waste: 240 }, { m: 'Фев', locations: 24, waste: 310 }, { m: 'Мар', locations: 19, waste: 280 }, { m: 'Апр', locations: 32, waste: 420 }, { m: 'Мај', locations: 38, waste: 515 }];
-  return <div className="screen-body"><GlassCard className="org-profile"><span className="org-seal"><ShieldCheck /></span><span className="eyebrow">ВЕРИФИКУВАНА ИНСТИТУЦИЈА</span><h2>Општина Скопје (демо)</h2><p>Служба за животна средина · kontakt@skopje.demo</p><div className="counter-grid"><Metric label="Исчистени локации" value={86} icon={<CheckCircle2 />} /><Metric label="Рециклиран отпад" value={12840} suffix="кг" icon={<Recycle />} /></div><DemoCaption /></GlassCard><GlassCard className="chart-card"><h3>Исчистени локации по месец</h3><div className="chart-wrap"><Suspense fallback={<div className="chart-skeleton" />}><MunicipalLocationChart data={chart} /></Suspense></div></GlassCard><GlassCard className="chart-card"><h3>Рециклиран отпад</h3><div className="chart-wrap"><Suspense fallback={<div className="chart-skeleton" />}><MunicipalWasteChart data={chart} /></Suspense></div></GlassCard><PrimaryButton secondary onClick={() => onSheet('archive')}>Отвори дигитален архив <ArrowRight size={16} /></PrimaryButton></div>;
+  const chart = [{ m: 'Јан', locations: 18, waste: 240 }, { m: 'Фев', locations: 24, waste: 310 }, { m: 'Мар', locations: 19, waste: 280 }, { m: 'Апр', locations: 32, waste: 420 }, { m: 'Мај', locations: 38, waste: 515 }, { m: 'Јун', locations: 41, waste: 560 }, { m: 'Јул', locations: 36, waste: 490 }, { m: 'Авг', locations: 45, waste: 630 }, { m: 'Сеп', locations: 49, waste: 710 }, { m: 'Окт', locations: 53, waste: 760 }, { m: 'Ное', locations: 48, waste: 690 }, { m: 'Дек', locations: 61, waste: 840 }];
+  return <div className="screen-body"><GlassCard className="org-profile"><span className="org-seal"><ShieldCheck /></span><span className="eyebrow">ВЕРИФИКУВАНА ИНСТИТУЦИЈА</span><h2>Општина Скопје (демо)</h2><p>Служба за животна средина · kontakt@skopje.demo</p><div className="counter-grid"><Metric label="Исчистени локации" value={86} icon={<CheckCircle2 />} /><Metric label="Рециклиран отпад" value={12840} suffix="кг" icon={<Recycle />} /></div><DemoCaption /></GlassCard><GlassCard className="chart-card"><h3>Исчистени локации по месец</h3><div className="chart-wrap"><Suspense fallback={<div className="chart-skeleton" />}><MunicipalLocationChart data={chart} /></Suspense></div><small>Месечен број на приоритетни локации исчистени во демо-приказот · посочи или допри график за детали.</small></GlassCard><GlassCard className="chart-card"><h3>Рециклиран отпад</h3><div className="chart-wrap"><Suspense fallback={<div className="chart-skeleton" />}><MunicipalWasteChart data={chart} /></Suspense></div><small>Собрани килограми по месец · посочи или допри график за точни вредности.</small></GlassCard><PrimaryButton secondary onClick={() => onSheet('archive')}>Отвори дигитален архив <ArrowRight size={16} /></PrimaryButton></div>;
 }
 
 function CorporateProfile({ onSheet }: { onSheet: (sheet: SheetType) => void }) {
-  return <div className="screen-body"><GlassCard className="org-profile corporate-profile"><span className="verified-stamp"><Check /></span><span className="brand-monogram tone-3 large-monogram">TP</span><span className="eyebrow">ПОТВРДЕН БРЕНД-ПАРТНЕР</span><h2>Компанија (демо)</h2><p>Поддржуваме зелени иницијативи и одговорни избори во заедницата.</p><a href="https://terrapulse.example" onClick={(event) => event.preventDefault()}>terrapulse.example</a><div className="profile-stats"><div><Gift /><b>12</b><small>спонзорирани акции</small></div><div><Ticket /><b>248</b><small>издадени ваучери</small></div><div><Leaf /><b>3,8 т</b><small>заштеден CO₂</small></div></div><DemoCaption /></GlassCard><PrimaryButton secondary onClick={() => onSheet('archive')}>Архива на трансакции <ArrowRight size={16} /></PrimaryButton></div>;
+  return <div className="screen-body"><GlassCard className="org-profile corporate-profile"><span className="verified-stamp"><Check /></span><span className="brand-monogram tone-3 large-monogram">TP</span><span className="eyebrow">ПОТВРДЕН БРЕНД-ПАРТНЕР</span><h2>TerraPulse</h2><p>Поддржуваме зелени иницијативи и одговорни избори во заедницата.</p><a href="https://terrapulse.example" onClick={(event) => event.preventDefault()}>terrapulse.example</a><div className="profile-stats"><div><Gift /><b>12</b><small>спонзорирани акции</small></div><div><Ticket /><b>248</b><small>издадени ваучери</small></div><div><Leaf /><b>3,8 т</b><small>заштеден CO₂</small></div></div><DemoCaption /></GlassCard><div className="archive-action"><PrimaryButton secondary onClick={() => onSheet('archive')}><PackageCheck size={16} /> Архива на трансакции <ArrowRight size={16} /></PrimaryButton></div></div>;
 }
 
 function ChestSheet({ onClose, addEnergy, addTokens, earnXp, activateBoost, saveBoost }: {
@@ -677,7 +692,7 @@ function App() {
                   <button className="top-chip flame-chip" onClick={() => setSheet('streak')} aria-label="Отвори ја низата"><Flame size={16} /><b>{streak}</b></button>
                   <button className="top-chip token-chip" onClick={() => setSheet('tokens')} aria-label="Отвори токени"><GreenToken size={20} /><b>{formatTokens(tokens)}</b></button>
                   <button className="top-chip energy-chip" onClick={() => setSheet('energy')} aria-label="Отвори енергија"><BatteryCharging size={17} /><b>{energy}/{premium ? 50 : 25}</b><Plus size={12} /></button>
-                </> : <div className="org-topline"><span className={`org-top-icon ${account}`}><AccountGlyph account={account} /></span><div><b>{account === 'municipal' ? 'Општина Скопје' : 'Компанија (демо)'}</b><small><ShieldCheck size={12} /> Верификуван профил</small></div></div>}
+                </> : <div className="org-topline"><span className={`org-top-icon ${account}`}><AccountGlyph account={account} /></span><div><b>{account === 'municipal' ? 'Општина Скопје' : 'TerraPulse'}</b><small><ShieldCheck size={12} /> Верификуван профил</small></div></div>}
               </header>
               {mobileSwitcher && <div className="mobile-switch-menu">{(['citizen', 'municipal', 'corporate'] as const).map((item) => <button key={item} onClick={() => { selectAccount(item); setMobileSwitcher(false); }} className={account === item ? 'active' : ''}><AccountGlyph account={item} />{accountNames[item]}</button>)}<button onClick={() => { resetDemo(); setMobileSwitcher(false); popToast('Демото е ресетирано'); }}><Recycle />Ресетирај демо</button></div>}
               <div className="screen-heading-wrap"><ScreenHeader account={account} tab={currentTab} index={activeTab} /></div>
