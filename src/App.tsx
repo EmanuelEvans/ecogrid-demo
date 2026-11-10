@@ -1,7 +1,7 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import {
-  Activity, ArrowLeft, ArrowRight, ArrowUp, Award, BatteryCharging, Bell, BookOpen, BriefcaseBusiness,
+  Activity, ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Award, BatteryCharging, Bell, BookOpen, BriefcaseBusiness,
   Check, CheckCircle2, ChevronDown, ChevronRight, CircleHelp, Clock3, Flame, Gift,
   Globe2, Heart, Leaf, Lock, MapPinned, Megaphone, MessageCircle, MoreHorizontal,
   PackageCheck, Plus, Recycle, Search, Send, Settings, ShieldCheck, ShoppingBag, Sparkles, Sprout,
@@ -207,7 +207,7 @@ function LessonPlayer({ unit, premium, energy, onClose, onMistake, onFinish }: {
   const question = lesson.questions[step]!;
   const verify = () => {
     const correct = question.type === 'order'
-      ? order.length === options.length && order.every((item, index) => item === options[index])
+      ? (order.length ? order : options).every((item, index) => item === options[index])
       : question.type === 'match'
         ? Object.keys(matches).length === options.length && options.every((_, index) => matches[index] === index)
         : selected === question.answer;
@@ -222,7 +222,7 @@ function LessonPlayer({ unit, premium, energy, onClose, onMistake, onFinish }: {
   };
   const options = question.options;
   const matchDescriptions = matchDescriptionsByTopic[(unit - 1) % matchDescriptionsByTopic.length]!;
-  const ready = question.type === 'order' ? order.length > 0 : question.type === 'match' ? Object.keys(matches).length === options.length : selected !== null;
+  const ready = question.type === 'order' ? options.length > 0 : question.type === 'match' ? Object.keys(matches).length === options.length : selected !== null;
   const move = (index: number, direction: -1 | 1) => {
     const arranged = order.length ? [...order] : [...options];
     const nextIndex = index + direction;
@@ -235,7 +235,7 @@ function LessonPlayer({ unit, premium, energy, onClose, onMistake, onFinish }: {
     <div className="lesson-body">
       <span className="eyebrow">ЛЕКЦИЈА {step + 1} ОД 5</span>
       <h2>{question.question}</h2>
-      {question.type === 'order' ? <div className="answer-list">{(order.length ? order : options).map((option, index) => <div className="order-option" key={option}><span className="order-num">{index + 1}</span><span>{option}</span><div><button onClick={() => move(index, -1)} aria-label="Помести нагоре"><ArrowLeft size={15} /></button><button onClick={() => move(index, 1)} aria-label="Помести надолу"><ArrowRight size={15} /></button></div></div>)}</div>
+      {question.type === 'order' ? <div className="answer-list">{(order.length ? order : options).map((option, index) => <div className="order-option" key={option}><span className="order-num">{index + 1}</span><span>{option}</span><div><button onClick={() => move(index, -1)} disabled={index === 0 || feedback !== null} aria-label="Помести нагоре"><ArrowUp size={15} /></button><button onClick={() => move(index, 1)} disabled={index === options.length - 1 || feedback !== null} aria-label="Помести надолу"><ArrowDown size={15} /></button></div></div>)}</div>
         : question.type === 'match' ? <div className="match-list"><div className="match-columns"><div>{options.map((option, index) => <button key={option} className={`match-choice ${matchLeft === index ? 'selected' : matches[index] !== undefined ? 'paired' : ''}`} onClick={() => setMatchLeft(index)}><span>{String.fromCharCode(65 + index)}</span>{option}{matches[index] !== undefined && <Check size={13} />}</button>)}</div><div>{matchDescriptions.map((description, index) => <button key={description} className={`match-choice ${Object.values(matches).includes(index) ? 'paired' : ''}`} onClick={() => { if (matchLeft !== null) { setMatches((current) => ({ ...current, [matchLeft]: index })); setMatchLeft(null); } }}><span>{index + 1}</span>{description}{Object.values(matches).includes(index) && <Check size={13} />}</button>)}</div></div><small className="muted-copy">Избери по еден поим од секоја колона.</small></div>
           : <div className="answer-list">{options.map((option, index) => <button key={option} className={`answer-option ${selected === index ? 'selected' : ''} ${question.type === 'boolean' ? 'boolean-option' : ''}`} onClick={() => setSelected(index)}><span className="option-letter">{question.type === 'boolean' ? (index === 0 ? '✓' : '×') : String.fromCharCode(65 + index)}</span>{option}</button>)}</div>}
       <p className="lesson-tip"><Sparkles size={15} /> Секој точен одговор те носи поблиску до еколошка промена.</p>
@@ -313,10 +313,22 @@ function Marketplace({ onSheet, onRedeem, balance }: { onSheet: (sheet: SheetTyp
   const visibleListings = listings.filter((listing) => (kind === 'Сѐ' || listing.category === kind) && listing.title.toLowerCase().includes(search.toLowerCase()));
   return <div className="screen-body">
     <label className="search-field"><Search size={17} /><input placeholder="Пребарај предмети" value={search} onChange={(event) => setSearch(event.target.value)} /><button onClick={() => setCategory(category === 'Сите категории' ? 'Категории' : 'Сите категории')}>{category}<ChevronDown size={14} /></button></label>
-    <div className="horizontal-chips">{['Сѐ', 'Донација', 'Продажба', 'Еко ваучери'].map((item) => <button key={item} className={kind === item ? 'selected' : ''} onClick={() => { setKind(item === 'Еко ваучери' ? 'Сѐ' : item); if (item === 'Еко ваучери') document.getElementById('vouchers')?.scrollIntoView({ behavior: 'smooth' }); }}>{item}</button>)}</div>
+    <div className="horizontal-chips">{['Сѐ', 'Донација', 'Продажба', 'Еко ваучери'].map((item) => <button key={item} className={kind === item ? 'selected' : ''} onClick={() => {
+      setKind(item);
+      if (item === 'Еко ваучери') {
+        const section = document.getElementById('vouchers');
+        const scrollContainer = section?.closest('.screen-body');
+        if (section && scrollContainer instanceof HTMLElement) {
+          scrollContainer.scrollTo({
+            top: scrollContainer.scrollTop + section.getBoundingClientRect().top - scrollContainer.getBoundingClientRect().top,
+            behavior: 'smooth',
+          });
+        }
+      }
+    }}>{item}</button>)}</div>
     {kind !== 'Еко ваучери' && <><div className="section-inline"><div><h2>Корисни предмети</h2><p>Пронајди нова намена за добри работи.</p></div><DemoCaption /></div>
       {visibleListings.length ? <div className="listing-grid">{visibleListings.map((item, index) => <GlassCard className="listing-card" key={item.id}>
-        <div className={`listing-art art-${index % 6}`}><span>{item.icon}</span><small>ФОТО</small></div><div className="listing-content"><div className="listing-tag-row"><StatusPill text={item.category === 'Донација' ? 'Бесплатно' : item.price} /><span>Добра состојба</span></div><b>{item.title}</b><p><MapPinned size={13} /> {item.place} · пред {index + 1} ч.</p><div className="seller-row"><Avatar name={item.seller} size={22} />{item.seller}<Reputation value={4} /></div></div>
+        <div className={`listing-art art-${index % 6}`}><span className="listing-product">{item.title === 'Полица од дрво' ? <span className="shelf-illustration" aria-label="Илустрација на дрвена полица"><i /><i /><i /></span> : item.icon}</span><small>ФОТО · ДЕМО</small></div><div className="listing-content"><div className="listing-tag-row"><StatusPill text={item.category === 'Донација' ? 'Бесплатно' : item.price} /><span>Добра состојба</span></div><b>{item.title}</b><p><MapPinned size={13} /> {item.place} · пред {index + 1} ч.</p><div className="seller-row"><Avatar name={item.seller} size={22} />{item.seller}<Reputation value={4} /></div></div>
       </GlassCard>)}</div> : <EmptyState title="Нема вакви огласи" text="Обиди се со друга категорија или пребарување." />}
     </>}
     <section className="voucher-section" id="vouchers">
@@ -707,7 +719,7 @@ function AccountGlyph({ account }: { account: Account }) {
 }
 
 function CitizenMap({ reports, onReport, onSelect, onConfirm }: { reports: ReturnType<typeof useDemoStore.getState>['reports']; onReport: () => void; onSelect: (report: Report) => void; onConfirm: (id: string) => void }) {
-  return <div className="citizen-map-screen"><Suspense fallback={<div className="map-skeleton" />}><MapScreen reports={reports} onSelect={onSelect} /></Suspense><div className="map-map-title"><span><MapPinned size={15} /> Еко Карта</span><small>Пожари и диви депонии</small></div><div className="map-report-list"><div className="section-inline"><h2>Пријави во близина</h2><DemoCaption /></div>{reports.slice(0, 3).map((report) => <GlassCard key={report.id} className="map-report-row"><button onClick={() => onSelect(report)}><span className={`mini-map-pin ${report.kind === 'Пожар' ? 'fire' : ''}`}>{report.kind === 'Пожар' ? <Flame /> : <Recycle />}</span><span><b>{report.place}</b><small>{report.kind} · {report.time}</small><Reputation value={report.reputation} /></span><StatusPill text={report.status} /></button><button className="confirm-button" onClick={() => onConfirm(report.id)}><Check size={14} /> Потврди · {report.confirmations}</button></GlassCard>)}</div><button className="map-report-button" onClick={onReport}><Plus size={18} /> Пријави</button></div>;
+  return <div className="citizen-map-screen"><Suspense fallback={<div className="map-skeleton" />}><MapScreen reports={reports} onSelect={onSelect} /></Suspense><div className="map-map-title"><span><MapPinned size={15} /> Еко Карта</span><small>{reports.length} активни пријави · пожари, чад и депонии</small></div><div className="map-report-list"><div className="section-inline"><h2>Пријави во близина</h2><DemoCaption /></div>{reports.slice(0, 3).map((report) => <GlassCard key={report.id} className="map-report-row"><button onClick={() => onSelect(report)}><span className={`mini-map-pin ${report.kind === 'Пожар' ? 'fire' : ''}`}>{report.kind === 'Пожар' ? <Flame /> : <Recycle />}</span><span><b>{report.place}</b><small>{report.kind} · {report.time}</small><Reputation value={report.reputation} /></span><StatusPill text={report.status} /></button><button className="confirm-button" onClick={() => onConfirm(report.id)}><Check size={14} /> Потврди · {report.confirmations}</button></GlassCard>)}</div><button className="map-report-button" onClick={onReport}><Plus size={18} /> Пријави</button></div>;
 }
 
 export default App;

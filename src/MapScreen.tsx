@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { MapContainer, Marker, Popup, TileLayer, ImageOverlay } from 'react-leaflet';
 import L, { type LatLngBoundsExpression } from 'leaflet';
-import { Flame, MapPin, Recycle } from 'lucide-react';
+import { Flame, MapPin, Recycle, Users } from 'lucide-react';
 import type { Report } from './data';
 
 const mapBounds: LatLngBoundsExpression = [[40.82, 20.31], [42.38, 23.07]];
@@ -49,7 +49,15 @@ export function EcoMap({ reports, onSelect }: { reports: Report[]; onSelect: (re
         )}
         {visible.map((report) => (
           <Marker key={report.id} position={places[report.id] ?? [41.6, 21.7]} icon={markerIcon(report)} eventHandlers={{ click: () => onSelect(report) }}>
-            <Popup><strong>{report.kind}</strong><br />{report.place}<br />{report.status}</Popup>
+            <Popup>
+              <div className="map-popup">
+                <small>{report.id} · {report.time}</small>
+                <strong>{report.kind}</strong>
+                <span><MapPin size={12} />{report.place}</span>
+                <span><b>{report.priority}</b> приоритет · {report.status}</span>
+                <small>{report.user} · <Users size={11} /> {report.confirmations} потврди</small>
+              </div>
+            </Popup>
           </Marker>
         ))}
       </MapContainer>
@@ -73,7 +81,7 @@ export function EcoMap({ reports, onSelect }: { reports: Report[]; onSelect: (re
           </button>
         ))}
       </div>
-      <div className="map-credit">Карта: Зелена берза · демо-приказ</div>
+      <div className="map-credit">Слоеви: пријави, приоритет и статус · демо-приказ</div>
     </div>
   );
 }
