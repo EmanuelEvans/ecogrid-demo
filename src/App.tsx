@@ -468,7 +468,7 @@ function CorporateScreen({ tab, actions, issuedVouchers, usedVouchers, onSheet, 
 }
 
 function Metric({ label, value, suffix = '', icon }: { label: string; value: number; suffix?: string; icon: React.ReactNode }) {
-  return <GlassCard className="metric-card"><span>{icon}</span><b>{value.toLocaleString('de-DE')}{suffix && <small>{suffix}</small>}</b><p>{label}</p><DemoCaption /></GlassCard>;
+  return <GlassCard className="metric-card"><span>{icon}</span><b>{value.toLocaleString('de-DE')}{suffix && <small>{suffix}</small>}</b><p>{label}</p></GlassCard>;
 }
 
 function ReportCard({ report, onCreateOrder, onClick }: { report: Report; onCreateOrder: (id: string) => void; onClick: () => void }) {
@@ -725,7 +725,7 @@ function AccountGlyph({ account }: { account: Account }) {
 }
 
 function CitizenMap({ reports, onReport, onSelect, onConfirm }: { reports: ReturnType<typeof useDemoStore.getState>['reports']; onReport: () => void; onSelect: (report: Report) => void; onConfirm: (id: string) => void }) {
-  return <div className="citizen-map-screen"><Suspense fallback={<div className="map-skeleton" />}><MapScreen reports={reports} onSelect={onSelect} /></Suspense><div className="map-map-title"><span><MapPinned size={15} /> Еко Карта</span><small>{reports.length} активни пријави · пожари, чад и депонии</small></div><div className="map-report-list"><div className="section-inline"><h2>Пријави во близина</h2><DemoCaption /></div>{reports.slice(0, 3).map((report) => <GlassCard key={report.id} className="map-report-row"><button onClick={() => onSelect(report)}><span className={`mini-map-pin ${report.kind === 'Пожар' ? 'fire' : ''}`}>{report.kind === 'Пожар' ? <Flame /> : <Recycle />}</span><span><b>{report.place}</b><small>{report.kind} · {report.time}</small><Reputation value={report.reputation} /></span><StatusPill text={report.status} /></button><button className="confirm-button" onClick={() => onConfirm(report.id)}><Check size={14} /> Потврди · {report.confirmations}</button></GlassCard>)}</div><button className="map-report-button" onClick={onReport}><Plus size={18} /> Пријави</button></div>;
+  return <div className="citizen-map-screen"><Suspense fallback={<div className="map-skeleton" />}><MapScreen reports={reports} onSelect={onSelect} /></Suspense><div className="map-report-list"><div className="section-inline"><h2>Пријави во близина</h2><DemoCaption /></div>{reports.slice(0, 3).map((report) => <GlassCard key={report.id} className="map-report-row"><button onClick={() => onSelect(report)}><span className={`mini-map-pin ${report.kind === 'Пожар' ? 'fire' : ''}`}>{report.kind === 'Пожар' ? <Flame /> : <Recycle />}</span><span><b>{report.place}</b><small>{report.kind} · {report.time}</small><Reputation value={report.reputation} /></span><StatusPill text={report.status} /></button><button className="confirm-button" onClick={() => onConfirm(report.id)}><Check size={14} /> Потврди · {report.confirmations}</button></GlassCard>)}</div><button className="map-report-button" onClick={onReport}><Plus size={18} /> Пријави</button></div>;
 }
 
 export default App;

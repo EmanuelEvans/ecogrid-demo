@@ -1,12 +1,9 @@
 import { useMemo, useState } from 'react';
-import { MapContainer, Marker, Popup, TileLayer, ImageOverlay } from 'react-leaflet';
-import L, { type LatLngBoundsExpression } from 'leaflet';
+import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
+import L from 'leaflet';
 import { Flame, MapPin, Recycle, Users } from 'lucide-react';
 import type { Report } from './data';
 
-const mapBounds: LatLngBoundsExpression = [[40.82, 20.31], [42.38, 23.07]];
-const cartoApiKey = import.meta.env.VITE_CARTO_API_KEY;
-const cartoTileUrl = `https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png${cartoApiKey ? `?key=${encodeURIComponent(cartoApiKey)}` : ''}`;
 const places: Record<string, [number, number]> = {
   'EG-2041': [41.976, 21.410], 'EG-2040': [42.057, 21.548], 'EG-2039': [41.990, 21.465],
   'EG-2038': [41.963, 21.443], 'EG-2037': [41.032, 21.340], 'EG-2036': [41.906, 21.624],
@@ -34,17 +31,9 @@ export function EcoMap({ reports, onSelect }: { reports: Report[]; onSelect: (re
       <MapContainer center={[41.6, 21.7]} zoom={8} minZoom={7} maxZoom={13} scrollWheelZoom className="eco-leaflet">
         {!tileError && (
           <TileLayer
-            attribution='&copy; OpenStreetMap &copy; CARTO'
-            url={cartoTileUrl}
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             eventHandlers={{ tileerror: () => setTileError(true), tileload: () => setTileLoaded(true) }}
-          />
-        )}
-        {tileLoaded && !tileError && (
-          <ImageOverlay
-            url="https://zelenaberza.com.mk/wp-content/uploads/2015/11/publikuvanata-prvata-detalna-karta-na-makedonija.jpg"
-            bounds={mapBounds}
-            opacity={0.28}
-            eventHandlers={{ error: () => setTileError(true) }}
           />
         )}
         {visible.map((report) => (
@@ -81,7 +70,7 @@ export function EcoMap({ reports, onSelect }: { reports: Report[]; onSelect: (re
           </button>
         ))}
       </div>
-      <div className="map-credit">Слоеви: пријави, приоритет и статус · демо-приказ</div>
+      <div className="map-credit"><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">© OpenStreetMap contributors</a> · демо-приказ</div>
     </div>
   );
 }
