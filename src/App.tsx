@@ -689,7 +689,7 @@ function App() {
             {(onboarding === 'register' || onboarding === 'login') && <AuthForm key={onboarding} mode={onboarding} onBack={() => setOnboarding('welcome')} onDone={() => { setOnboarding('app'); popToast('Добредојде во EcoGrid'); }} onInstitution={() => setSheet('business')} />}
             {onboarding === 'verification' && <VerificationScreen account={verificationAccount} onDone={() => { selectAccount(verificationAccount); popToast('Демо-профилот е верификуван'); }} />}
             {onboarding === 'app' && <motion.div key="app" className="app-view" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-              <header className="app-topbar">
+              <header className={`app-topbar ${account === 'citizen' ? 'citizen-topbar' : ''}`}>
                 <div className="mobile-brand"><EcoGridLogo size={34} compact /><b>Eco<span>Grid</span></b></div>
                 <button className="mobile-switch-trigger" onClick={() => setMobileSwitcher(!mobileSwitcher)} aria-label="Преклопи демо-акаунт"><MoreHorizontal size={18} /></button>
                 {account === 'citizen' ? <>
@@ -697,6 +697,7 @@ function App() {
                   <button className="top-chip token-chip" onClick={() => setSheet('tokens')} aria-label="Отвори токени"><GreenToken size={20} /><b>{formatTokens(tokens)}</b></button>
                   <button className="top-chip energy-chip" onClick={() => setSheet('energy')} aria-label="Отвори енергија"><BatteryCharging size={17} /><b>{energy}/{premium ? 50 : 25}</b><Plus size={12} /></button>
                 </> : <div className="org-topline"><span className={`org-top-icon ${account}`}><AccountGlyph account={account} /></span><div><b>{account === 'municipal' ? 'Општина Скопје' : 'TerraPulse'}</b><small><ShieldCheck size={12} /> Верификуван профил</small></div></div>}
+                <button className={`profile-shortcut ${activeTab === tabs.length - 1 ? 'active' : ''}`} onClick={() => setTab(tabs.length - 1)} aria-label="Профил" aria-current={activeTab === tabs.length - 1 ? 'page' : undefined}>{tabIcons[account][tabs.length - 1]}</button>
               </header>
               {mobileSwitcher && <div className="mobile-switch-menu">{(['citizen', 'municipal', 'corporate'] as const).map((item) => <button key={item} onClick={() => { selectAccount(item); setMobileSwitcher(false); }} className={account === item ? 'active' : ''}><AccountGlyph account={item} />{accountNames[item]}</button>)}<button onClick={() => { resetDemo(); setMobileSwitcher(false); popToast('Демото е ресетирано'); }}><Recycle />Ресетирај демо</button></div>}
               <div className="screen-heading-wrap"><ScreenHeader account={account} tab={currentTab} index={activeTab} /></div>
@@ -712,7 +713,7 @@ function App() {
                   {account === 'corporate' && <CorporateScreen tab={activeTab} actions={actions} issuedVouchers={issuedVouchers} usedVouchers={usedVouchers} onSheet={setSheet} onPublishAction={(action) => publishAction({ ...action, organiser: 'Компанија' })} onSponsor={(action) => { setSelectedBrand(action); setSheet('sponsor'); }} />}
                 </motion.section>
               </AnimatePresence>
-              <nav className="bottom-nav" aria-label="Главна навигација">{tabs.map((tab, index) => <button key={tab} onClick={() => setTab(index)} className={`nav-item ${activeTab === index ? 'active' : ''}`} aria-current={activeTab === index ? 'page' : undefined}><span className="nav-indicator">{activeTab === index && <motion.i layoutId="nav-indicator" />}</span><span className="nav-icon">{tabIcons[account][index]}</span><small>{tab}</small>{account === 'citizen' && index === 4 && notices.some((notice) => notice.kind === 'alert') && <i className="nav-dot" />}</button>)}</nav>
+              <nav className="bottom-nav" aria-label="Главна навигација">{tabs.slice(0, -1).map((tab, index) => <button key={tab} onClick={() => setTab(index)} className={`nav-item ${activeTab === index ? 'active' : ''}`} aria-current={activeTab === index ? 'page' : undefined}><span className="nav-indicator">{activeTab === index && <motion.i layoutId="nav-indicator" />}</span><span className="nav-icon">{tabIcons[account][index]}</span><small>{tab}</small>{account === 'citizen' && index === 4 && notices.some((notice) => notice.kind === 'alert') && <i className="nav-dot" />}</button>)}</nav>
             </motion.div>}
           </AnimatePresence>
           <AnimatePresence>{toast && <motion.div className="toast-message" initial={{ y: -40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -30, opacity: 0 }}><CheckCircle2 size={17} />{toast.text}<button onClick={() => setToast(null)} aria-label="Затвори известување"><X size={15} /></button></motion.div>}</AnimatePresence>
