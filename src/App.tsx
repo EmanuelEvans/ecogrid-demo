@@ -9,16 +9,17 @@ import {
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
+import QRCode from 'qrcode';
 import { BrandOrb, EcoGridLogo, GreenToken, TabEmblem } from './Brand';
 import {
   brands, citizenTabs, corporateTabs, lessonsByUnit, municipalTabs, sectionTwoTitles,
   unitTitles, type Account, type Report, type ReportKind,
 } from './data';
 import { RULES, formatDenar, formatTokens } from './rules';
-import { useDemoStore } from './store';
+import { useDemoStore, type Listing } from './store';
 import './App.css';
 
-type SheetType = 'energy' | 'streak' | 'tokens' | 'premium' | 'wallet' | 'listing' | 'sponsor' | 'report' | 'archive' | 'institution' | 'business' | null;
+type SheetType = 'energy' | 'streak' | 'tokens' | 'premium' | 'wallet' | 'listing' | 'listing-detail' | 'sponsor' | 'report' | 'archive' | 'institution' | 'business' | null;
 type ToastMessage = { id: number; text: string };
 const MapScreen = lazy(async () => {
   const { EcoMap } = await import('./MapScreen');
@@ -153,10 +154,6 @@ function Welcome({ onEnter, onRegister, onLogin }: { onEnter: () => void; onRegi
         <span><b>Следете нè на Instagram</b><small>@terrapulse_innovations</small></span>
         <ArrowRight size={16} aria-hidden="true" />
       </motion.a>
-      <a className="easter-egg-link" href="https://youtu.be/dQw4w9WgXcQ" target="_blank" rel="noreferrer" aria-label="Отвори мало изненадување на YouTube">
-        <Gift size={18} aria-hidden="true" />
-        <span>Изненадување</span>
-      </a>
     </div>
     <div className="welcome-foot"><ShieldCheck size={14} /> Демонстрациска апликација · TerraPulse Innovations</div>
   </motion.div>;
@@ -327,7 +324,7 @@ function SocialFeed() {
   return <div className="stack">{posts.map((post, index) => <GlassCard key={post.user} className="feed-post"><div className="feed-head"><Avatar name={post.user} /><div><b>{post.user}</b><small>пред {index + 1} ч. · Скопје</small></div><MoreHorizontal size={19} /></div><p>{post.text}</p><div className="feed-art"><span>{post.icon}</span><b>{post.badge}</b><span className="photo-tag">ФОТО</span></div><div className="feed-actions"><button onClick={() => setLiked((items) => items.includes(index) ? items.filter((item) => item !== index) : [...items, index])} className={liked.includes(index) ? 'liked' : ''}><Heart size={18} fill={liked.includes(index) ? 'currentColor' : 'none'} /> {liked.includes(index) ? 25 : 24 + index}</button><button><MessageCircle size={18} /> {index + 2}</button><button><ArrowRight size={18} /> Сподели</button></div></GlassCard>)}<DemoCaption /></div>;
 }
 
-function Marketplace({ onSheet, onRedeem, balance }: { onSheet: (sheet: SheetType) => void; onRedeem: (brand: string, value: number) => void; balance: number }) {
+function Marketplace({ onSheet, onRedeem, onSelectListing, balance }: { onSheet: (sheet: SheetType) => void; onRedeem: (brand: string, value: number) => void; onSelectListing: (listing: Listing) => void; balance: number }) {
   const [category, setCategory] = useState('Сите');
   const [kind, setKind] = useState('Сѐ');
   const [search, setSearch] = useState('');
@@ -350,7 +347,7 @@ function Marketplace({ onSheet, onRedeem, balance }: { onSheet: (sheet: SheetTyp
     }}>{item}</button>)}</div>
     {kind !== 'Еко ваучери' && <><div className="section-inline"><div><h2>Корисни предмети</h2><p>Пронајди нова намена за добри работи.</p></div><DemoCaption /></div>
       {visibleListings.length ? <div className="listing-grid">{visibleListings.map((item, index) => <GlassCard className="listing-card" key={item.id}>
-        <div className={`listing-art art-${index % 6}`}><span className="listing-product">{item.title === 'Полица од дрво' ? <span className="shelf-illustration" aria-label="Илустрација на дрвена полица"><i /><i /><i /></span> : item.icon}</span><small>ФОТО · ДЕМО</small></div><div className="listing-content"><div className="listing-tag-row"><StatusPill text={item.category === 'Донација' ? 'Бесплатно' : item.price} /><span>Добра состојба</span></div><b>{item.title}</b><p><MapPinned size={13} /> {item.place} · пред {index + 1} ч.</p><div className="seller-row"><Avatar name={item.seller} size={22} />{item.seller}<Reputation value={4} /></div></div>
+        <div className={`listing-art art-${index % 6}`}><span className="listing-product">{item.title === 'Полица од дрво' ? <span className="shelf-illustration" aria-label="Илустрација на дрвена полица"><i /><i /><i /></span> : item.icon}</span><small>ФОТО · ДЕМО</small></div><div className="listing-content"><div className="listing-tag-row"><StatusPill text={item.category === 'Донација' ? 'Бесплатно' : item.price} /><span>Добра состојба</span></div><b>{item.title}</b><p><MapPinned size={13} /> {item.place} · пред {index + 1} ч.</p><div className="seller-row"><Avatar name={item.seller} size={22} />{item.seller}<Reputation value={4} /></div><button className="listing-action" onClick={() => onSelectListing(item)}>{item.category === 'Донација' ? 'Побарај донација' : `Купи · ${item.price}`} <ArrowRight size={14} /></button></div>
       </GlassCard>)}</div> : <EmptyState title="Нема вакви огласи" text="Обиди се со друга категорија или пребарување." />}
     </>}
     <section className="voucher-section" id="vouchers">
@@ -417,6 +414,7 @@ function Profile({ onSheet, premium, tokens, xp, streak, reputation, vouchers, s
       <div className="profile-avatar"><Avatar name="@marija_k" size={82} /><span><Check size={13} /></span></div><h2>@marija_k {premium && <StatusPill text="Премиум" />}</h2><p>Мали чекори, почиста Македонија 🌿</p><div className="profile-joined">Член од март 2025 · Скопје</div><Reputation value={reputation} label />
       <div className="profile-stats"><div><Flame /><b>{streak}</b><small>дена низа</small></div><div><Zap /><b>{formatTokens(xp)}</b><small>вкупно XP</small></div><div><Users /><b>128</b><small>пријатели</small></div></div><div className="xp-line"><div className="xp-line-label"><span>Ниво 4 · Зелено листо</span><span>1.250 / 2.000 XP</span></div><ProgressBar value={xp % 2_000} max={2_000} /></div><DemoCaption />
     </GlassCard>
+    <a className="profile-surprise" href="https://youtu.be/dQw4w9WgXcQ" target="_blank" rel="noreferrer"><Gift size={18} /><span><b>Изненадување</b><small>Отвори мало изненадување на YouTube</small></span><ArrowRight size={16} /></a>
     <div className="profile-row"><h2>Мои беџови</h2><button className="text-button" onClick={() => setShowAllBadges(true)} aria-expanded={showAllBadges}>Прикажи сѐ <ArrowRight size={15} /></button></div>
     <div className="badges-grid">{badges.slice(0, 4).map((badge) => <GlassCard className={`badge-card ${badge.earned ? '' : 'badge-locked'}`} key={badge.title}><span className="badge-icon">{badge.icon}</span><small>{badge.title}</small></GlassCard>)}</div>
     {showAllBadges && <div className="modal-backdrop badge-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) setShowAllBadges(false); }}><motion.div className="modal-sheet badges-modal" role="dialog" aria-modal="true" aria-labelledby="badges-title" initial={{ y: 60, opacity: 0 }} animate={{ y: 0, opacity: 1 }}><div className="sheet-handle" /><button className="sheet-close" onClick={() => setShowAllBadges(false)} aria-label="Затвори"><X /></button><span className="eyebrow">ЕКО-ПОСТИГНУВАЊА</span><h2 id="badges-title">Сите беџови</h2><p>{badges.filter((badge) => badge.earned).length} од {badges.length} беџови освоени. Продолжи со активности за да ги отклучиш останатите.</p><div className="all-badges-grid">{badges.map((badge) => <GlassCard className={`badge-card ${badge.earned ? '' : 'badge-locked'}`} key={badge.title}><span className="badge-icon">{badge.icon}</span><b className="badge-title">{badge.title}</b><small>{badge.earned ? 'Освоен' : badge.detail}</small>{badge.earned && <CheckCircle2 className="badge-earned-check" size={14} />}</GlassCard>)}</div></motion.div></div>}
@@ -431,10 +429,20 @@ function Profile({ onSheet, premium, tokens, xp, streak, reputation, vouchers, s
 
 function VoucherCard({ voucher, onUse }: { voucher: ReturnType<typeof useDemoStore.getState>['vouchers'][number]; onUse: () => void }) {
   const [showQr, setShowQr] = useState(false);
-  const qrPattern = Array.from({ length: 49 }, (_, index) => (voucher.code.charCodeAt(index % voucher.code.length) * (index + 3)) % 7 < 3);
+  const [qrSource, setQrSource] = useState('');
+  const [qrError, setQrError] = useState(false);
+  useEffect(() => {
+    if (!showQr) return;
+    let active = true;
+    const url = `${window.location.origin}${import.meta.env.BASE_URL}?voucher=${encodeURIComponent(voucher.code)}`;
+    QRCode.toDataURL(url, { width: 180, margin: 2, errorCorrectionLevel: 'M', color: { dark: '#12251a', light: '#ffffff' } })
+      .then((source) => { if (active) { setQrSource(source); setQrError(false); } })
+      .catch(() => { if (active) setQrError(true); });
+    return () => { active = false; };
+  }, [showQr, voucher.code]);
   return <GlassCard className="ticket-card">
     <div className="ticket-left"><span className="brand-monogram tone-2">{voucher.brand.slice(0, 2).toUpperCase()}</span><div><b>{voucher.brand}</b><span>{formatDenar(voucher.value)}</span><small>Важи до {voucher.expires}</small></div></div>
-    {showQr && <div className="voucher-qr"><div className="qr-pattern" aria-label="Демонстрациски QR-код">{qrPattern.map((filled, index) => <i className={filled ? 'filled' : ''} key={index} />)}</div><b>{voucher.code}</b><small>Демо QR-код · не е за вистинско плаќање</small></div>}
+    {showQr && <div className="voucher-qr">{qrSource ? <img className="voucher-qr-image" src={qrSource} alt={`QR-код за ваучер ${voucher.code}`} /> : qrError ? <p role="alert">QR-кодот не може да се генерира. Обиди се повторно.</p> : <span className="qr-loading">Се подготвува QR-код…</span>}<b>{voucher.code}</b><small>Демо QR-код · не е за вистинско плаќање</small></div>}
     <button className="ticket-use" disabled={voucher.used} onClick={() => voucher.used ? undefined : showQr ? onUse() : setShowQr(true)}>{voucher.used ? 'Искористен' : showQr ? 'Означи како искористен' : 'Прикажи QR-код'}</button>
   </GlassCard>;
 }
@@ -596,6 +604,7 @@ function App() {
   const [listingKind, setListingKind] = useState<'Донација' | 'Продажба'>('Донација');
   const [listingTitle, setListingTitle] = useState('');
   const [listingPrice, setListingPrice] = useState('');
+  const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
   const [fakeAd, setFakeAd] = useState(false);
   const [adCountdown, setAdCountdown] = useState(5);
   const [premiumBusy, setPremiumBusy] = useState(false);
@@ -721,7 +730,7 @@ function App() {
               <AnimatePresence mode="wait">
                 <motion.section className="active-screen" key={`${account}-${activeTab}`} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.24 }}>
                   {account === 'citizen' && activeTab === 0 && <Academy completedUnits={completedUnits} premium={premium} onStart={(unit) => { if (energy <= 0) setSheet('energy'); else setLessonUnit(unit); }} onSwitch={(value) => value === 'Еко-ковчег' ? (setSelectedBrand('Еко-ковчег'), setSheet('sponsor')) : undefined} />}
-                  {account === 'citizen' && activeTab === 1 && <Marketplace onSheet={setSheet} onRedeem={showBrandVoucher} balance={tokens} />}
+                  {account === 'citizen' && activeTab === 1 && <Marketplace onSheet={setSheet} onRedeem={showBrandVoucher} onSelectListing={(listing) => { setSelectedListing(listing); setSheet('listing-detail'); }} balance={tokens} />}
                   {account === 'citizen' && activeTab === 2 && <VoiceScreen ballots={ballots} onVote={(id, choice) => { vote(id, choice); popToast('Твојот глас е забележан'); }} onPublish={() => setSheet('institution')} />}
                   {account === 'citizen' && activeTab === 3 && <CitizenMap reports={reports} onReport={() => { setReportStep(0); setSheet('report'); }} onSelect={setSelectedReport} onConfirm={(id) => { confirmReport(id); popToast('Ја потврди пријавата'); }} />}
                   {account === 'citizen' && activeTab === 4 && <EcoChat key={`${chatAlert}-${chatAlertVersion}`} notices={notices} messages={messages} initialSection={chatAlert || 'Информации'} onSend={(text) => sendMessage(text)} />}
@@ -745,6 +754,7 @@ function App() {
             {sheet === 'wallet' && <><span className="sheet-icon"><Ticket /></span><span className="eyebrow">ДИГИТАЛЕН ПАРИЧНИК</span><h2>Мои ваучери</h2><p>Секој ваучер важи 3 месеци од подигнувањето.</p>{vouchers.length ? <div className="wallet-list">{vouchers.map((voucher) => <VoucherCard key={voucher.id} voucher={voucher} onUse={() => { markVoucherUsed(voucher.id); popToast('Ваучерот е означен како искористен'); }} />)}</div> : <EmptyState title="Паричникот е празен" text="Подигни ваучер во маркетплејсот и зачувај го тука." />}<PrimaryButton secondary onClick={() => { setSheet(null); setTab(1); }}>Оди во маркетплејс</PrimaryButton></>}
             {sheet === 'sponsor' && <>{selectedBrand === 'Еко-ковчег' ? <ChestSheet onClose={setSheet} addEnergy={addEnergy} addTokens={addTokens} earnXp={earnXp} activateBoost={() => { activateBoost(); popToast('2× XP бустерот е активен 10 минути'); }} saveBoost={() => { saveBoost(); popToast('Бустерот е зачуван во профилот'); }} /> : <><span className="eyebrow">{account === 'corporate' ? 'СПОНЗОРСТВО' : 'ПАРТНЕРСКИ ВАУЧЕР'}</span><h2>{brands.includes(selectedBrand) ? selectedBrand : 'Поддржи еко-акција'}</h2>{brands.includes(selectedBrand) ? <><p>Избери вредност за ваучерот што го поддржува твојот еко-придонес.</p><div className="denomination-list">{RULES.vouchers.map((voucher) => <button key={voucher.value} className={`denomination ${selectedValue === voucher.value ? 'selected' : ''}`} onClick={() => setSelectedValue(voucher.value)}><div><b>{formatDenar(voucher.value)}</b><span>{formatTokens(voucher.tokens)} токени</span></div><span>{tokens >= voucher.tokens ? <CheckCircle2 /> : `Недостасуваат ${formatTokens(voucher.tokens - tokens)}`}</span><ProgressBar value={tokens} max={voucher.tokens} /></button>)}</div><small className="muted-copy">Важи 3 месеци од подигнувањето.</small><PrimaryButton disabled={tokens < selectedValue * RULES.tokensPerDenar} onClick={() => purchaseVoucher(selectedBrand, selectedValue)}>Подигни ваучер · {formatTokens(selectedValue * RULES.tokensPerDenar)} <GreenToken size={18} /></PrimaryButton></> : <><p>Придонеси за акцијата „{selectedBrand}“ и поддржи учесници.</p><label className="field"><span>Износ за поддршка</span><input type="number" placeholder="Износ во денари" /></label><label className="settings-row"><span>Прикажи го партнерството</span><i className="switch on" /></label><PrimaryButton onClick={() => { setSheet(null); popToast('Спонзорството е потврдено во демо'); }}>Потврди спонзорство</PrimaryButton></>}</>}</>}
             {sheet === 'listing' && <><span className="eyebrow">ЗЕЛЕН ПЛУС</span><h2>Објави корисен предмет</h2><div className="horizontal-chips">{(['Донација', 'Продажба'] as const).map((item) => <button key={item} className={listingKind === item ? 'selected' : ''} onClick={() => setListingKind(item)}>{item}</button>)}</div><button className="photo-placeholder" onClick={(event) => event.currentTarget.classList.toggle('added')}><Plus /><span>Додај фотографија</span></button><label className="field"><span>Име на предметот</span><input placeholder="На пример: Книги за природа" value={listingTitle} onChange={(event) => setListingTitle(event.target.value)} /></label><label className="field"><span>Категорија</span><select defaultValue="Дом и градина"><option>Дом и градина</option><option>Облека</option><option>Електроника</option><option>Книги</option><option>Играчки</option></select></label>{listingKind === 'Продажба' && <label className="field"><span>Цена во денари</span><input type="number" placeholder="300" value={listingPrice} onChange={(event) => setListingPrice(event.target.value)} /></label>}<label className="field"><span>Опис и локација</span><textarea placeholder="Опиши ја состојбата и местото за преземање" /></label><PrimaryButton onClick={createListing}>Објави оглас <ArrowRight size={16} /></PrimaryButton></>}
+            {sheet === 'listing-detail' && selectedListing && <><span className="eyebrow">{selectedListing.category === 'Донација' ? 'ПРЕДМЕТ ЗА ДОНАЦИЈА' : 'ПРЕДМЕТ ЗА ПРОДАЖБА'}</span><h2>{selectedListing.title}</h2><div className="listing-detail-art">{selectedListing.title === 'Полица од дрво' ? <span className="shelf-illustration" aria-label="Илустрација на дрвена полица"><i /><i /><i /></span> : selectedListing.icon}</div><div className="listing-detail-meta"><span><MapPinned size={15} />{selectedListing.place}</span><span><Avatar name={selectedListing.seller} size={22} />{selectedListing.seller}</span><StatusPill text={selectedListing.category === 'Донација' ? 'Бесплатно' : selectedListing.price} /></div><p>Состојбата е добра. Договори преземање директно со продавачот.</p><p className="listing-demo-note">Ова е демонстрација: нема вистинско плаќање, резервација или испорака.</p><PrimaryButton onClick={() => { const donated = selectedListing.category === 'Донација'; setSheet(null); popToast(donated ? 'Демо-барањето за донација е забележано' : 'Демо-интересот за купување е забележан'); }}>{selectedListing.category === 'Донација' ? 'Побарај донација' : `Купи · ${selectedListing.price}`} <ArrowRight size={16} /></PrimaryButton></>}
             {sheet === 'report' && <><span className="eyebrow">ПРИЈАВА · ЧЕКОР {reportStep + 1} ОД 4</span><ProgressBar value={reportStep + 1} max={4} /><h2>{['Што забележа?', 'Означи ја локацијата', 'Додај детали', 'Провери и испрати'][reportStep]}</h2>{reportStep === 0 ? <div className="report-kind-list">{(['Пожар', 'Дива депонија', 'Сомнителен чад'] as const).map((kind) => <button className={`report-kind ${reportKind === kind ? 'selected' : ''}`} key={kind} onClick={() => setReportKind(kind)}>{kind === 'Пожар' ? <Flame /> : kind === 'Дива депонија' ? <Trash2 /> : <Activity />}{kind}<ChevronRight /></button>)}</div> : reportStep === 1 ? <><div className="report-location-preview"><MapPinned size={28} /><span>Пин-позиција на картата</span></div><label className="field"><span>Место или населба</span><input value={reportPlace} onChange={(event) => setReportPlace(event.target.value)} /></label></> : reportStep === 2 ? <><button className="photo-placeholder" onClick={(event) => event.currentTarget.classList.toggle('added')}><Plus /><span>Додај фотографија (по избор)</span></button><label className="field"><span>Кратка белешка</span><textarea placeholder="Што треба да знае општината?" value={reportNote} onChange={(event) => setReportNote(event.target.value)} /></label></> : <><GlassCard className="report-summary"><StatusPill text={reportKind} /><h3>{reportPlace}</h3><p>{reportNote || 'Пријава поднесена од Еко Карта.'}</p><div className="report-owner"><Avatar name="@marija_k" /><span>@marija_k<small>Твојот профил</small></span><Reputation value={reputation} /></div></GlassCard><p className="privacy-note"><ShieldCheck size={16} /> Пријавата ќе се прикаже како @marija_k со репутација {reputation}/5.</p></>}<div className="sheet-step-actions">{reportStep > 0 && <PrimaryButton secondary onClick={() => setReportStep((value) => value - 1)}><ArrowLeft size={16} /> Назад</PrimaryButton>}<PrimaryButton onClick={() => reportStep === 3 ? publishReport() : setReportStep((value) => value + 1)}>{reportStep === 3 ? 'Испрати пријава' : 'Продолжи'} <ArrowRight size={16} /></PrimaryButton></div></>}
             {sheet === 'archive' && <><span className="sheet-icon"><PackageCheck /></span><span className="eyebrow">ДИГИТАЛЕН АРХИВ</span><h2>{account === 'corporate' ? 'Трансакции и ESG' : 'Општински извештаи'}</h2><p>Демонстрациски документи за тековниот период.</p>{['Месечен еко-извештај · мај', 'Преглед на активни ваучери', 'Извештај за спроведени акции'].map((item) => <GlassCard key={item} className="archive-row"><span><PackageCheck />{item}</span><button onClick={(event) => { event.currentTarget.innerHTML = '✓'; }}>Преземи</button></GlassCard>)}</>}
             {sheet === 'institution' && <><span className="sheet-icon"><Vote /></span><span className="eyebrow">ЗАЕДНИЧКА ИНИЦИЈАТИВА</span><h2>Твојот предлог е важен</h2><p>Во оваа демонстрација, предлозите и анкетите се објавуваат од верификуван општински профил.</p><PrimaryButton onClick={() => { setSheet(null); setAccount('municipal'); setTab(2); }}>Отвори општинско демо <ArrowRight size={16} /></PrimaryButton></>}
